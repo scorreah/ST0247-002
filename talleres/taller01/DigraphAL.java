@@ -45,10 +45,12 @@ public class DigraphAL extends Digraph {
      */
     public ArrayList<Integer> getSuccessors(int vertex) {
         ArrayList<Integer> successors = new ArrayList<>();
+        //LinkedList<Pair <Integer, Integer>> lista = listaDeListas.get(vertex); 
         for(int i = 0; i < listaDeListas.get(vertex).size(); i++){
-            successors.add((listaDeListas.get(vertex).get(i)).getKey());
+            if (listaDeListas.get(vertex).get(i).getValue() != 0)
+                successors.add((listaDeListas.get(vertex).get(i)).getKey());
         }
-        return successors;
+        return successors.size() > 0 ? successors : null;
     }
 
     /**
@@ -64,7 +66,7 @@ public class DigraphAL extends Digraph {
             if (lista.get(i).getKey() == destination)
                 return lista.get(i).getValue();
         }
-        return -1;
+        return 0;
     }
 
 }

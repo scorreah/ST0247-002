@@ -15,7 +15,7 @@ public class DigraphAM extends Digraph {
      */
     public DigraphAM(int size) { 
         super(size);
-
+        matriz = new int[size][size];
     } 
 
     /**
@@ -42,7 +42,7 @@ public class DigraphAM extends Digraph {
         for(int i = 0; i< matriz.length; i++){
             if (matriz[vertex][i] != 0) successors.add(i);
         }
-        return successors;
+        return successors.size() > 0 ? successors : null;
     } 
 
     /**
