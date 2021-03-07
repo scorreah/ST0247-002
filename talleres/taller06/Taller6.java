@@ -4,6 +4,7 @@
  * 
  * @author Mauricio Toro, Andres Paez
  */
+import java.util.Collections;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,24 +19,20 @@ public class Taller6 {
      * @return un conjunto de unidades por denominacion
      */
     public static int[] cambioGreedy(int n, int[] denominaciones) {
-        Arrays.sort(denominaciones);
         int solucion = 0;
-        int i = denominaciones.length -1;
-        ArrayList<Integer> res = new ArrayList<>();
-        while (i >= 0)
+        int[] res = new int[denominaciones.length]; 
+        int i = 0;
+        while (i <= denominaciones.length-1)
         {
-            if (denominaciones[i] <= n) {
+            if (solucion == n) return res;
+            else if (denominaciones[i] <= (n-solucion)) {
                 solucion += denominaciones[i];
-                res.add(denominaciones[i]);
+                res[i]++;
             } else {
-                i--;
+                i++;
             }
         }
-        Object[] array = res.toArray(); 
-        int[] arr1 = new int[array.length];
-        for (int j = 0; j < array.length; j++)
-            arr1[j] = (Integer)array[i];
-        return arr1;
+        return solucion == n? res : null;
     }
 
     /**
