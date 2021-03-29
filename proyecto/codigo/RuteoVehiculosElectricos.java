@@ -63,10 +63,10 @@ public class RuteoVehiculosElectricos {
                 //coordenadas.add(new Pair(Float.parseFloat(lineaPartida[2]), Float.parseFloat(lineaPartida[3])));
                 //tipoEstacion[i] = Short.parseShort(lineaPartida[5]);
             }
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < m; j++) {
                     double tiempo = (Math.sqrt(Math.pow(coordenadas.get(i).first - coordenadas.get(j).first,2)+ 
-                                Math.pow(coordenadas.get(i).second - coordenadas.get(j).second, 2)))/speed;
+                                               Math.pow(coordenadas.get(i).second - coordenadas.get(j).second, 2)))/speed;
                     mapa.addArc(i, j, tiempo);
                 }
             }
@@ -156,31 +156,35 @@ public class RuteoVehiculosElectricos {
     public static String[][] test(){
         File f = new File("../DataSets");
         ArrayList<String> names = new ArrayList<>(Arrays.asList(f.list()));
-        String[][] analisis = new String[names.size()][5];
+        String[][] analisis = new String[names.size()][7];
         int cont = 0;
         for(String file: names) {
             System.gc();
             Runtime runtime = Runtime.getRuntime();
             long memoryBefore = runtime.totalMemory() - runtime.freeMemory();
-            RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
-            analisis[cont][2] = ""+problema1.m;
+            
             long mejor, peor, prom;
             mejor = Long.MAX_VALUE;
             peor = 0;
             prom = 0;
             for (int i = 0; i < 100; i++) {
                 long ti = System.currentTimeMillis();
+                RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
+                analisis[cont][2] = ""+problema1.m;
+                
                 problema1.solucionar(true);
                 long tf = System.currentTimeMillis();
                 long total = tf - ti;
                 mejor = total < mejor ? total : mejor;
                 peor = total > peor ? total : peor;
             }
+            RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
             problema1.solucionar(false);
             analisis[cont][3] = "" + problema1.noRutas;
             analisis[cont][4] = "" + problema1.tiempoTotalRutas();
-   
+            analisis[cont][5] = "" + mejor;
             prom = (peor + mejor) /2;
+            analisis[cont][6] = "" + prom;
             System.gc();
             long memoryAfter = runtime.totalMemory() - runtime.freeMemory();
             long memoryUsed = ((memoryAfter - memoryBefore)/1024); //Memoria en KB
@@ -201,6 +205,7 @@ public class RuteoVehiculosElectricos {
             }
             tiempo += this.mapa.getWeight(0, ruta.get(ruta.size()-1));
         }
+        tiempo = Math.round(tiempo * 100.0) / 100.0;
         return tiempo;
     }
     public static void clearScreen() {  
@@ -212,8 +217,8 @@ public class RuteoVehiculosElectricos {
     private static void printResults(String[][] analisis) {
         clearScreen();
         for(int i = 0; i < analisis.length; i++ ) {
-            System.out.printf("%s KB, %s ms, %s clientes, %s camiones, %s tiempo total de todas las rutas\n",
-                analisis[i][0], analisis[i][1], analisis[i][2], analisis[i][3], analisis[i][4]);
+            System.out.printf("%s KB, %s ms (peor), %s ms (mejor), %s ms (prom), %s clientes, %s camiones, %s tiempo total de todas las rutas\n",
+                analisis[i][0], analisis[i][1], analisis[i][5], analisis[i][6], analisis[i][2], analisis[i][3], analisis[i][4]);
         }
     }
 
