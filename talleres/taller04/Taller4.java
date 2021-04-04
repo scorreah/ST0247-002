@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * Clase en la cual se implementan los metodos del Taller 4
  * 
- * @author Mauricio Toro, Andres Paez
+ * @author Simon Correa, David Gomez, Mauricio Toro, Andres Paez
  */
 public class Taller4 {
     /**
