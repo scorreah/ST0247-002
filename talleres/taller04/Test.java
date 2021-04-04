@@ -174,6 +174,7 @@ public class Test {
                 if (sol != map.get(Pair.makePair(i, j)))
                     errores++;
             }
+        if (errores > 0) System.out.println("Tienes " + errores + " errores");
         return errores > 0 ? false : true;
     }
 

@@ -1,5 +1,5 @@
 import java.util.ArrayList;
-import java.util.Stack;
+//import java.util.Stack;
 import java.util.Arrays;
 //import jdk.internal.net.http.common.MinimalFuture;
 /**
@@ -32,12 +32,12 @@ public class Taller4 {
     private static boolean hayCaminoDFS(Digraph g, int v, int w, boolean[] visitados) {
         visitados[v] = true;
         if(v == w)return true;
-        ArrayList<Integer> hola = g.getSuccessors(v);
-        if(hola == null) return false;
-        if(hola.contains(w))return true;
-        for(int i = 0; i < hola.size(); i++){
-            if(!(visitados[hola.get(i)] == true)){ //Si es un sucesor y no lo ha visitado
-                if(hayCaminoDFS(g, hola.get(i), w, visitados))return true;
+        ArrayList<Integer> sucesores = g.getSuccessors(v);
+        if(sucesores == null) return false;
+        if(sucesores.contains(w))return true;
+        for(int i = 0; i < sucesores.size(); i++){
+            if(!(visitados[sucesores.get(i)] == true)){ //Si es un sucesor y no lo ha visitado
+                if(hayCaminoDFS(g, sucesores.get(i), w, visitados))return true;
             }
         }
         return false;
@@ -65,13 +65,13 @@ public class Taller4 {
         int min = Integer.MAX_VALUE;
         if(v == w)return 0;
         visitados[v] = true;
-        ArrayList<Integer> hola = g.getSuccessors(v);
-        if (hola == null) return Integer.MAX_VALUE;
-        for(int i = 0; i < hola.size(); i++){
-            if(!(visitados[hola.get(i)] == true)){ 
-                int valorMinimo = minimoCaminoDFS(g, hola.get(i), w, visitados);
+        ArrayList<Integer> sucesores = g.getSuccessors(v);
+        if (sucesores == null) return Integer.MAX_VALUE;
+        for(int i = 0; i < sucesores.size(); i++){
+            if(!(visitados[sucesores.get(i)] == true)){ 
+                int valorMinimo = minimoCaminoDFS(g, sucesores.get(i), w, visitados);
                 if (valorMinimo == Integer.MAX_VALUE) continue;
-                int c = g.getWeight(v, hola.get(i)) + valorMinimo;
+                int c = g.getWeight(v, sucesores.get(i)) + valorMinimo;
                 min = Math.min(min, c);
                 visitados[v] = false;
             }
