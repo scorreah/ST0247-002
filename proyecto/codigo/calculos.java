@@ -5,13 +5,35 @@
  * @version 28/03/2021
  */
 import java.util.ArrayList;
+import java.util.Random;
 public class calculos{
     double[][] ahorro;
     double[][] ahorros;
     int ultimo;
     int contador;
     int[] limpiados;
+    int metodo;
+    Aleatorio random;
     public static ArrayList<ArrayList<Integer>> rutas = new ArrayList<ArrayList<Integer>>();
+    
+    public calculos() {
+        rutas.clear();
+        this.metodo = 1;
+    }
+
+    public calculos(int metodo) {
+        rutas.clear();
+        this.metodo = (metodo != 1 && metodo != 2)? 1: metodo;
+        this.random = new Aleatorio();
+    }
+
+    public calculos(long seed) {
+        rutas.clear();
+        //this.metodo = (metodo != 1 && metodo != 2)? 2: metodo;
+        this.metodo = 2;
+        this.random = new Aleatorio(seed);
+    }
+
     public void ahorros(Digraph mapa, int size){
         contador = size-1;
         limpiados = new int[size];
@@ -46,14 +68,60 @@ public class calculos{
         for(int i = 0; i < ahorro.length; i++)
             ahorros[i] = ahorro[i].clone();
         double mayor = 0;
+        MejorClark mejor1, mejor2, mejor3;
+        mejor1 = new MejorClark();
+        mejor2 = new MejorClark();
+        mejor3 = new MejorClark();
         int x = 0;      //Cliente 1
         int y = 0;      //Cliente 2
         for(int i = 1; i < RuteoVehiculosElectricos.m +1; i++){
             for(int j = i; j < RuteoVehiculosElectricos.m +1; j++){
-                if(mayor < ahorros[i][j]){ //Encuentra el mayor ahorro
-                    mayor = ahorros[i][j];
-                    x = i;
-                    y = j;
+                if(metodo == 1) {
+                    if(mayor < ahorros[i][j]){ //Encuentra el mayor ahorro
+                        mayor = ahorros[i][j];
+                        x = i;
+                        y = j;
+                    }
+                } else if (metodo == 2) {   //Busqueda Local
+                    if(mejor1.getAhorro() < ahorros[i][j]){ //Encuentra el mayor ahorro
+                        // 3er mejor ahorro
+                        mejor3.setAhorro(mejor2.getAhorro());
+                        mejor3.setX(mejor2.getX());
+                        mejor3.setY(mejor2.getY());
+                        // 2ndo mejor ahorro
+                        mejor2.setAhorro(mejor1.getAhorro());
+                        mejor2.setX(mejor1.getX());
+                        mejor2.setY(mejor1.getY());
+                        // 1er mejor ahorro
+                        mejor1.setAhorro(ahorros[i][j]);
+                        mejor1.setX(i);
+                        mejor1.setY(j);
+                        if (contador > 3) {
+                            switch (random.next()) {
+                                case 1:
+                                    mayor = mejor1.getAhorro();
+                                    x = mejor1.getX();
+                                    y = mejor1.getY();
+                                    break;
+                                case 2:
+                                    mayor = mejor2.getAhorro();
+                                    x = mejor2.getX();
+                                    y = mejor2.getY();
+                                    break;
+                                case 3: 
+                                    mayor = mejor3.getAhorro();
+                                    x = mejor3.getX();
+                                    y = mejor3.getY();
+                                    break;                        
+                                default:
+                                    break;
+                            }
+                        } else {
+                            mayor = ahorros[i][j];
+                            x = i;
+                            y = j;
+                        }
+                    }
                 }
             }
         }

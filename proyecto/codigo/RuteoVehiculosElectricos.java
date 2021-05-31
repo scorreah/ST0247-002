@@ -7,10 +7,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.JFrame;
+import java.util.Random;
+
 public class RuteoVehiculosElectricos {
     ArrayList<ArrayList<Integer>> rutas;
     int noRutas;
@@ -91,10 +94,12 @@ public class RuteoVehiculosElectricos {
             System.out.println(ex);
         }
     }
+
     @Override
     public String toString() {
         return "RuteoVehiculosElectricos{" + "r=" + r + ", speed=" + speed + ", Tmax=" + Tmax + ", Smax=" + Smax + ", st_customer=" + st_customer + ", Q=" + Q + ", tiempoSolucion=" + tiempoSolucion + '}';
     }
+
     public void exportarPuntosCSV() {
         try {
             PrintStream escribirCoordenadas = new PrintStream(new File("ArchivosGenerados\\Coordenadas.csv"));
@@ -107,6 +112,7 @@ public class RuteoVehiculosElectricos {
             System.out.println(ex);
         }
     }
+
     /*public void exportarRutasCSV(ArrayList<ArrayList<Integer>> rutas) {
     try {
     int numRuta = 0;
@@ -123,19 +129,23 @@ public class RuteoVehiculosElectricos {
     System.out.println(ex);
     }
     }*/
-    public void solucionar(boolean test) {
-        calculos solucion = new calculos();
+
+    public void solucionar(int metodo, long seed) {
+        calculos solucion;
+        if (metodo == 2) {
+            solucion = new calculos(seed);
+        } else {
+            solucion = new calculos(metodo);
+        }
+
         solucion.ahorros(this.mapa, m+1);
         solucion.calculadorRuta(this.mapa);
-        if (test) {
-            this.rutas = solucion.obtenerRuta(); 
-        } else {
-            this.rutas = solucion.rutas;
-        }
+        this.rutas = solucion.rutas;
         this.rutas.trimToSize();
         this.noRutas = this.rutas.size();
         System.out.println();
     }
+
     /**
      * Este metodo es un test para verificar que la solucion es correcta. 
      * @param rutas Es un contenedor de rutas representadas por un arraylist de parejas donde el primer elemento indica el nodo
@@ -145,9 +155,15 @@ public class RuteoVehiculosElectricos {
     public boolean comprobarSolucion( ArrayList<ArrayList<Pair<Integer, Integer>>> rutas){
         return false;
     }
-    public static String[][] test(){
+
+    public static String[][] test() throws IOException{
         File f = new File("../DataSets");
         ArrayList<String> names = new ArrayList<>(Arrays.asList(f.list()));
+        Ficheros resultados = new Ficheros(names.size());
+        File fileResults = new File("Resultados.txt");
+        if(!fileResults.createNewFile()) { //Si Resultados.txt ya existia
+            resultados.read();
+        }
         String[][] analisis = new String[names.size()][7];
         int cont = 0;
         for(String file: names) {
@@ -158,20 +174,23 @@ public class RuteoVehiculosElectricos {
             mejor = Long.MAX_VALUE;
             peor = 0;
             prom = 0;
+            Random generadorSemillas = new Random(System.currentTimeMillis());
+            long seed = Math.abs(generadorSemillas.nextLong());
             for (int i = 0; i < 100; i++) {
                 long ti = System.currentTimeMillis();
                 RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
                 analisis[cont][2] = ""+problema1.m;
-                problema1.solucionar(true);
+                problema1.solucionar(2, seed);   
                 long tf = System.currentTimeMillis();
                 long total = tf - ti;
                 mejor = total < mejor ? total : mejor;
                 peor = total > peor ? total : peor;
             }
             RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
-            problema1.solucionar(false);
+            problema1.solucionar(2, seed);
             analisis[cont][3] = "" + problema1.noRutas;
-            analisis[cont][4] = "" + problema1.tiempoTotalRutas();
+            double tiempoTotalRutas = problema1.tiempoTotalRutas();
+            analisis[cont][4] = "" + tiempoTotalRutas;
             analisis[cont][5] = "" + mejor;
             prom = (peor + mejor) /2;
             analisis[cont][6] = "" + prom;
@@ -181,9 +200,16 @@ public class RuteoVehiculosElectricos {
             analisis[cont][0] = "" + memoryUsed;
             analisis[cont][1] = "" + peor;
             cont++;
+            if (resultados.contains(file) == -1) {
+                resultados.addNew(file, problema1.tiempoTotalRutas(), seed);
+            } else if (tiempoTotalRutas < resultados.getTime(file)) {
+                resultados.update(file, tiempoTotalRutas, seed);
+            }
         }
+        resultados.write();
         return analisis;
     }
+
     public double tiempoTotalRutas() {
         double tiempo = 0;
         for (ArrayList<Integer> ruta: this.rutas) {
@@ -196,11 +222,13 @@ public class RuteoVehiculosElectricos {
         tiempo = Math.round(tiempo * 100.0) / 100.0;
         return tiempo;
     }
+
     public static void clearScreen() {  
         System.out.printf("\033[H\033[2J");  
         System.out.flush();  
         System.out.println();
     } 
+
     private static void printResults(String[][] analisis) {
         clearScreen();
         for(int i = 0; i < analisis.length; i++ ) {
@@ -208,16 +236,114 @@ public class RuteoVehiculosElectricos {
                 analisis[i][0], analisis[i][1], analisis[i][5], analisis[i][6], analisis[i][2], analisis[i][3], analisis[i][4]);
         }
     }
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws IOException {
+        long ti = System.currentTimeMillis();
         File f = new File("../DataSets");
         ArrayList<String> names = new ArrayList<>(Arrays.asList(f.list()));
+        Ficheros resultados = new Ficheros(names.size());                
         System.gc();
         String[][] analisis = test();
+        //String[][] analisis = best();
         printResults(analisis);
         System.out.println("Bien hecho");
+        long tf = System.currentTimeMillis();
+        long total = tf - ti;
+        System.out.println("Tiempo del algoritmo (best): " + total + " ms");
         //DibujarRuta bueno = new DibujarRuta(
         //problema1.exportarPuntosCSV();
     }
+
+    public static void trainning() throws IOException{
+        long ti = System.currentTimeMillis();
+        File f = new File("../DataSets");
+        ArrayList<String> names = new ArrayList<>(Arrays.asList(f.list()));
+        Ficheros resultados = new Ficheros(names.size());
+        File fileResults = new File("Resultados.txt");
+        if(!fileResults.createNewFile()) { //Si Resultados.txt ya existia
+            resultados.read();
+        } else {
+            return;
+        }
+        for(String file: names) {
+            for (int i = 0; i < 1000; i++) {
+                //long ti = System.currentTimeMillis();
+                Random generadorSemillas = new Random(System.currentTimeMillis());
+                long seed = Math.abs(generadorSemillas.nextLong());
+                RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
+                problema1.solucionar(2, seed);   
+                // long tf = System.currentTimeMillis();
+                // long total = tf - ti;
+                // mejor = total < mejor ? total : mejor;
+                // peor = total > peor ? total : peor;
+                double tiempoTotalRutas = problema1.tiempoTotalRutas();
+                if (resultados.contains(file) == -1) {
+                    resultados.addNew(file, problema1.tiempoTotalRutas(), seed);
+                } else if (tiempoTotalRutas < resultados.getTime(file)) {
+                    resultados.update(file, tiempoTotalRutas, seed);
+                }
+            }
+        }
+        long tf = System.currentTimeMillis();
+        long total = tf - ti;
+        System.out.println("Tiempo del algoritmo (entrenamiento): " + total + " ms");
+    }
+    
+    public static String[][] best() throws IOException{
+        File f = new File("../DataSets");
+        ArrayList<String> names = new ArrayList<>(Arrays.asList(f.list()));
+        Ficheros resultados = new Ficheros(names.size());
+        File fileResults = new File("Resultados.txt");
+        if(!fileResults.createNewFile()) { //Si Resultados.txt ya existia
+            resultados.read();
+        } else {
+            return null; 
+        }
+        String[][] analisis = new String[names.size()][7];
+        int cont = 0;
+        for(String file: names) {
+            System.gc();
+            Runtime runtime = Runtime.getRuntime();
+            long memoryBefore = runtime.totalMemory() - runtime.freeMemory();
+            long mejor, peor, prom;
+            mejor = Long.MAX_VALUE;
+            peor = 0;
+            prom = 0;
+            long seed = resultados.getSeed(file);
+            for (int i = 0; i < 100; i++) {
+                long ti = System.currentTimeMillis();
+                RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
+                analisis[cont][2] = ""+problema1.m;
+                problema1.solucionar(2, seed);   
+                long tf = System.currentTimeMillis();
+                long total = tf - ti;
+                mejor = total < mejor ? total : mejor;
+                peor = total > peor ? total : peor;
+            }
+            RuteoVehiculosElectricos problema1 = new RuteoVehiculosElectricos("../DataSets/"+file);
+            problema1.solucionar(2, seed);
+            analisis[cont][3] = "" + problema1.noRutas;
+            double tiempoTotalRutas = problema1.tiempoTotalRutas();
+            analisis[cont][4] = "" + tiempoTotalRutas;
+            analisis[cont][5] = "" + mejor;
+            prom = (peor + mejor) /2;
+            analisis[cont][6] = "" + prom;
+            System.gc();
+            long memoryAfter = runtime.totalMemory() - runtime.freeMemory();
+            long memoryUsed = ((memoryAfter - memoryBefore)/1024); //Memoria en KB
+            analisis[cont][0] = "" + memoryUsed;
+            analisis[cont][1] = "" + peor;
+            cont++;
+            if (resultados.contains(file) == -1) {
+                resultados.addNew(file, problema1.tiempoTotalRutas(), seed);
+            } else if (tiempoTotalRutas < resultados.getTime(file)) {
+                resultados.update(file, tiempoTotalRutas, seed);
+            }
+        }
+        resultados.write();
+        return analisis;
+    }
+    
     public static void probando() {
         File f = new File("../DataSets");
         ArrayList<String> names = new ArrayList<>(Arrays.asList(f.list()));
